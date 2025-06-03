@@ -67,6 +67,7 @@ export interface Country {
 export interface TikTokAccount {
   ID: number;
   AccountName: string;
+  Nickname?: string;
   CountryID: number;
   WindowOpen: string; // YYYY-MM-DD format
   Status: string;
@@ -83,6 +84,8 @@ export interface TikTokAccount {
   VideosDiff3: number;
   VideosDiff7: number;
   VideosDiff30: number;
+  SpiderLastUpdateAt?: string;
+  IPStatus?: string;
   CreatedAt: string;
   UpdatedAt: string;
 }
@@ -144,4 +147,13 @@ export interface ApiResponse<T = any> {
   Code: number;
   Message: string;
   Data: T;
+}
+
+// User Info types
+export interface UserInfo {
+  id: number;
+  username: string;
+  role: 'admin' | 'operator';
+  group_id: number;
+  group_name: string;
 } 

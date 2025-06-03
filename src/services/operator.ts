@@ -7,6 +7,7 @@ import type {
   AccountMetrics,
   PaginatedResponse,
   ApiResponse,
+  UserInfo,
 } from '@/types';
 
 // TikTok Account APIs
@@ -16,6 +17,7 @@ export const createTikTokAccount = async (params: CreateTikTokAccountParams): Pr
 
 export const getTikTokAccounts = async (params: TikTokAccountQueryParams): Promise<ApiResponse<PaginatedResponse<TikTokAccount>>> => {
   const { page, pageSize, ...rest } = params;
+  console.log('getTikTokAccounts API调用:', { page, pageSize, rest });
   return request.get('/api/account', {
     params: {
       page,
@@ -40,4 +42,9 @@ export const getAccountMetrics = async (accountId: number): Promise<ApiResponse<
       account_id: accountId
     }
   });
+};
+
+// User Info APIs
+export const getCurrentUserInfo = async (): Promise<ApiResponse<UserInfo>> => {
+  return request.get('/api/user/info');
 }; 

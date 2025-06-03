@@ -10,6 +10,11 @@ import type {
   PaginationParams,
   PaginatedResponse,
   ApiResponse,
+  TikTokAccount,
+  CreateTikTokAccountParams,
+  UpdateTikTokAccountParams,
+  TikTokAccountQueryParams,
+  AccountMetrics,
 } from '@/types';
 
 // Group APIs
@@ -65,11 +70,22 @@ export const getOperators = async (params: PaginationParams): Promise<ApiRespons
 
 export const updateOperator = async (id: number, params: UpdateOperatorParams): Promise<ApiResponse<Operator>> => {
   const { username, password, groupId } = params;
-  return request.put(`/api/admin/operators/${id}`, {
-    username,
-    password,
-    group_id: groupId
-  });
+  
+  // 构建请求数据
+  const requestData: any = {
+    username: username || "",
+    group_id: Number(groupId) || 0
+  };
+  
+  // 只有密码不为空时才发送密码字段，避免后端验证错误
+  if (password !== undefined && password.trim() !== '') {
+    requestData.password = password.trim();
+  }
+  
+  console.log('UpdateOperator request data:', requestData);
+  console.log('Request URL:', `/api/admin/operators/${id}`);
+  
+  return request.put(`/api/admin/operators/${id}`, requestData);
 };
 
 export const deleteOperator = async (id: number): Promise<ApiResponse<null>> => {
@@ -98,6 +114,40 @@ export const updateProxy = async (id: number, params: CreateProxyParams): Promis
 
 export const deleteProxy = async (id: number): Promise<ApiResponse<null>> => {
   return request.delete(`/api/admin/proxies/${id}`);
+};
+
+// TikTok Account APIs for Admin
+export const createTikTokAccount = async (params: CreateTikTokAccountParams): Promise<ApiResponse<TikTokAccount>> => {
+  return request.post('/api/admin/accounts', params);
+};
+
+export const getTikTokAccounts = async (params: TikTokAccountQueryParams): Promise<ApiResponse<PaginatedResponse<TikTokAccount>>> => {
+  const { page, pageSize, ...rest } = params;
+  console.log('Admin getTikTokAccounts API调用:', { page, pageSize, rest });
+  return request.get('/api/admin/accounts', {
+    params: {
+      page,
+      page_size: pageSize,
+      ...rest
+    }
+  });
+};
+
+export const updateTikTokAccount = async (id: number, params: UpdateTikTokAccountParams): Promise<ApiResponse<TikTokAccount>> => {
+  return request.put(`/api/admin/accounts/${id}`, params);
+};
+
+export const deleteTikTokAccount = async (id: number): Promise<ApiResponse<{ deleted_id: number }>> => {
+  return request.delete(`/api/admin/accounts/${id}`);
+};
+
+// Account Metrics APIs for Admin
+export const getAccountMetrics = async (accountId: number): Promise<ApiResponse<AccountMetrics>> => {
+  return request.get('/api/admin/accounts/metrics', {
+    params: {
+      account_id: accountId
+    }
+  });
 };
 
 // Export API

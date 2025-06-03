@@ -10,7 +10,7 @@ import {
   message,
   Popconfirm,
 } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, DownloadOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { Operator, Group } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
 import * as adminService from '@/services/admin';
@@ -119,8 +119,23 @@ const OperatorList: React.FC = () => {
   const handleSubmit = async () => {
     try {
       const values = await form.validateFields();
+      console.log('Form values:', values);
+      
       if (editingId) {
-        const response = await adminService.updateOperator(editingId, values);
+        // 编辑模式：构建更新参数
+        const updateParams: any = {
+          username: values.username,
+          groupId: values.groupId,
+        };
+        
+        // 只有密码不为空且不为空字符串时才传递密码参数
+        if (values.password && typeof values.password === 'string' && values.password.trim() !== '') {
+          updateParams.password = values.password.trim();
+        }
+        
+        console.log('Update params:', updateParams);
+        
+        const response = await adminService.updateOperator(editingId, updateParams);
         const { Code, Message } = response;
         if (Code === 0) {
           message.success('更新成功');
@@ -142,29 +157,7 @@ const OperatorList: React.FC = () => {
       }
     } catch (error) {
       console.error('Form validation failed:', error);
-    }
-  };
-
-  const handleExport = async () => {
-    try {
-      message.info('正在导出数据...');
-      const response = await adminService.exportAccounts();
-      
-      // 创建下载链接
-      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `tiktok_accounts_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      message.success('导出成功');
-    } catch (error) {
-      message.error('导出失败');
-      console.error('Failed to export accounts:', error);
+      // 不再显示通用的"表单验证失败"消息，让具体的验证错误显示
     }
   };
 
@@ -227,12 +220,6 @@ const OperatorList: React.FC = () => {
           >
             新建运营人员
           </Button>
-          <Button
-            icon={<DownloadOutlined />}
-            onClick={handleExport}
-          >
-            导出TikTok账号
-          </Button>
         </Space>
       </div>
 
@@ -275,7 +262,19 @@ const OperatorList: React.FC = () => {
             label="密码"
             rules={[
               { required: !editingId, message: '请输入密码' },
-              { min: 6, message: '密码至少6个字符' },
+              { 
+                validator: (_, value) => {
+                  // 编辑模式下，如果密码为空则不验证
+                  if (editingId && (!value || value.trim() === '')) {
+                    return Promise.resolve();
+                  }
+                  // 新建模式或编辑模式下有输入密码时，验证长度
+                  if (!value || value.length < 6) {
+                    return Promise.reject(new Error('密码至少6个字符'));
+                  }
+                  return Promise.resolve();
+                }
+              },
             ]}
           >
             <Input.Password

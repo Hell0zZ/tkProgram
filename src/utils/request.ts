@@ -46,24 +46,48 @@ request.interceptors.response.use(
   (response) => {
     const data = response.data;
     
+    // 兼容大小写字段名格式
+    const code = data.Code ?? data.code;
+    const msg = data.Message ?? data.message;
+    const responseData = data.Data ?? data.data;
+    
     // Handle successful response
-    if (data.Code === 0) {
-      return data;  // Return response.data directly
+    if (code === 0) {
+      // 统一返回大写格式，保持与TypeScript类型一致
+      return {
+        Code: code,
+        Message: msg || 'success',
+        Data: responseData
+      } as any;
     }
     
     // Handle business logic errors
-    if (data.Code === 401 || data.Code === 403) {
+    if (code === 401 || code === 403) {
       localStorage.removeItem('token');
       message.error('登录已过期，请重新登录');
       window.location.href = '/login';
       return Promise.reject(data);
     }
     
-    message.error(data.Message || '请求失败');
+    message.error(msg || '请求失败');
     return Promise.reject(data);
   },
   (error) => {
     console.error('Response error:', error);
+    
+    // 如果是countries接口的错误，静默处理，不显示错误提示
+    if (error.config && error.config.url && error.config.url.includes('countries')) {
+      console.warn('Countries API error (silently handled):', error);
+      return Promise.reject(error);
+    }
+    
+    // 如果是管理员访问账号相关API的权限错误，静默处理，不退出登录
+    if (error.config && error.config.url && 
+        (error.config.url.includes('/api/account') || error.config.url.includes('/api/user/info')) &&
+        error.response && (error.response.status === 401 || error.response.status === 403)) {
+      console.warn('Admin account API permission error (silently handled):', error);
+      return Promise.reject(error);
+    }
     
     // Handle HTTP errors
     if (error.response) {

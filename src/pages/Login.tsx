@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Input, Button, Card, message, Typography, Select, Space } from 'antd';
+import { Form, Input, Button, Card, message, Typography, Select } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import request from '../utils/request';
@@ -42,6 +42,7 @@ const Login: React.FC = () => {
       if (res.Data?.token) {
         localStorage.setItem('token', res.Data.token);
         localStorage.setItem('userRole', values.role);
+        localStorage.setItem('username', values.username);
         message.success('登录成功');
         
         // 根据角色跳转到不同的页面
@@ -59,15 +60,6 @@ const Login: React.FC = () => {
     } finally {
       if (isMounted.current) setLoading(false);
     }
-  };
-
-  const handleQuickLogin = (role: string) => {
-    const credentials = {
-      admin: { username: 'admin', password: 'admin123', role: 'admin' },
-      operator: { username: 'operator', password: 'operator123', role: 'operator' }
-    };
-    
-    form.setFieldsValue(credentials[role as keyof typeof credentials]);
   };
 
   console.log('Login component rendered');
@@ -137,27 +129,6 @@ const Login: React.FC = () => {
               </Button>
             </Form.Item>
           </Form>
-          
-          {/* 快速登录演示 */}
-          <div style={{ marginTop: 16, textAlign: 'center' }}>
-            <Typography.Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-              演示账号快速登录：
-            </Typography.Text>
-            <Space>
-              <Button 
-                size="small" 
-                onClick={() => handleQuickLogin('admin')}
-              >
-                管理员演示
-              </Button>
-              <Button 
-                size="small" 
-                onClick={() => handleQuickLogin('operator')}
-              >
-                运营人员演示
-              </Button>
-            </Space>
-          </div>
         </Card>
         <div className="login-footer">
           <Typography.Text type="secondary">
