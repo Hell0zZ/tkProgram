@@ -59,6 +59,7 @@ const TikTokAccountList: React.FC = () => {
           Nickname: account.Nickname || account.nickname,
           CountryID: account.CountryID || account.country_id,
           WindowOpen: account.WindowOpen || account.window_open,
+          RegTime: account.RegTime || account.reg_time,
           Status: account.Status || account.status || '未知',
           Usage: account.Usage || account.usage || '未知',
           CreatedBy: account.CreatedBy || account.created_by,
@@ -73,7 +74,9 @@ const TikTokAccountList: React.FC = () => {
           VideosDiff7: account.VideosDiff7 || account.videos_diff_7 || 0,
           VideosDiff30: account.VideosDiff30 || account.videos_diff_30 || 0,
           SpiderLastUpdateAt: account.SpiderLastUpdateAt || account.spider_last_update_at,
+          SpiderLastFailureAt: account.SpiderLastFailureAt || account.spider_last_failure_at,
           IPStatus: account.IPStatus || account.ip_status,
+          LastProxy: account.LastProxy || account.last_proxy,
           CreatedAt: account.CreatedAt || account.created_at,
           UpdatedAt: account.UpdatedAt || account.updated_at || account.CreatedAt || account.created_at,
           Remark: account.Remark || account.remark || '',
@@ -289,14 +292,10 @@ const TikTokAccountList: React.FC = () => {
     }
   };
 
-  const getIPStatusColor = (status: string) => {
-    switch (status) {
-      case 'success': 
-      case '成功': return 'green';
-      case 'failed': 
-      case '失败': return 'red';
-      default: return 'default';
-    }
+  const getIPStatusColor = (status: number | undefined) => {
+    if (status === 1) return 'green'; // 成功状态，绿色
+    if (status === 0) return 'red';   // 失败状态，红色
+    return 'default'; // 未知状态
   };
 
   const getDiffColor = (diff: number) => {
@@ -319,11 +318,11 @@ const TikTokAccountList: React.FC = () => {
     {
       title: '基本信息',
       children: [
-        {
-          title: '账号名',
-          dataIndex: 'AccountName',
-          key: 'accountName',
-          width: 120,
+    {
+      title: '账号名',
+      dataIndex: 'AccountName',
+      key: 'accountName',
+      width: 120,
           fixed: 'left',
         },
         {
@@ -332,36 +331,51 @@ const TikTokAccountList: React.FC = () => {
           key: 'nickname',
           width: 100,
           render: (text: string) => text || '-',
+    },
+    {
+      title: '国家',
+      dataIndex: 'CountryID',
+      key: 'country',
+      width: 80,
+      render: (countryId: number) => getCountryName(countryId),
+    },
+    {
+      title: '开窗日期',
+      dataIndex: 'WindowOpen',
+      key: 'windowOpen',
+          width: 120,
+          render: (text: string) => text ? dayjs(text).format('YYYY-MM-DD') : '-',
         },
         {
-          title: '国家',
-          dataIndex: 'CountryID',
-          key: 'country',
-          width: 80,
-          render: (countryId: number) => getCountryName(countryId),
-        },
-        {
-          title: '开窗日期',
-          dataIndex: 'WindowOpen',
-          key: 'windowOpen',
-          width: 100,
-          render: (text: string) => text || '-',
-        },
-        {
-          title: '状态',
-          dataIndex: 'Status',
-          key: 'status',
-          width: 80,
-          render: (status: string) => (
+          title: '注册日期',
+          dataIndex: 'RegTime',
+          key: 'regTime',
+          width: 120,
+          render: (text: string) => text ? dayjs(text).format('YYYY-MM-DD') : '-',
+    },
+    {
+      title: '状态',
+      dataIndex: 'Status',
+      key: 'status',
+      width: 80,
+      render: (status: string) => (
             <Tag color={getStatusColor(status)}>{status || '未知'}</Tag>
-          ),
+      ),
+    },
+    {
+      title: '用途',
+      dataIndex: 'Usage',
+      key: 'usage',
+      width: 80,
+          render: (usage: string) => usage || '未知',
         },
         {
-          title: '用途',
-          dataIndex: 'Usage',
-          key: 'usage',
-          width: 80,
-          render: (usage: string) => usage || '未知',
+          title: '备注',
+          dataIndex: 'Remark',
+          key: 'remark',
+          width: 120,
+          ellipsis: true,
+          render: (text: string) => text || '-',
         },
       ],
     },
@@ -370,8 +384,8 @@ const TikTokAccountList: React.FC = () => {
       children: [
         {
           title: '当前粉丝',
-          dataIndex: 'TodayFans',
-          key: 'todayFans',
+      dataIndex: 'TodayFans',
+      key: 'todayFans',
           width: 100,
           render: (fans: number) => (fans || 0).toLocaleString(),
         },
@@ -412,22 +426,22 @@ const TikTokAccountList: React.FC = () => {
           title: '30天前',
           dataIndex: 'FansDiff30',
           key: 'fansDiff30',
-          width: 90,
+      width: 90,
           render: (diff: number) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff || 0)}
             </span>
           ),
-        },
+    },
       ],
     },
     {
       title: '视频数据',
       children: [
-        {
+    {
           title: '当前视频',
-          dataIndex: 'TodayVideos',
-          key: 'todayVideos',
+      dataIndex: 'TodayVideos',
+      key: 'todayVideos',
           width: 100,
           render: (videos: number) => (videos || 0).toLocaleString(),
         },
@@ -468,7 +482,7 @@ const TikTokAccountList: React.FC = () => {
           title: '30天前',
           dataIndex: 'VideosDiff30',
           key: 'videosDiff30',
-          width: 90,
+      width: 90,
           render: (diff: number) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff || 0)}
@@ -482,22 +496,32 @@ const TikTokAccountList: React.FC = () => {
       children: [
         {
           title: '更新时间',
-          dataIndex: 'SpiderLastUpdateAt',
-          key: 'spiderLastUpdateAt',
+          key: 'updateTime',
           width: 140,
-          render: (text: string) => text ? new Date(text).toLocaleString() : '未更新',
+          render: (text: any, record: TikTokAccount) => {
+            const updateTime = record.IPStatus === 1 
+              ? record.SpiderLastUpdateAt 
+              : record.SpiderLastFailureAt;
+            return updateTime ? new Date(updateTime).toLocaleString() : '未更新';
+          },
         },
         {
-          title: 'IP状态',
-          dataIndex: 'IPStatus',
-          key: 'ipStatus',
-          width: 80,
-          render: (status: string) => {
-            if (!status) return <Tag>未知</Tag>;
+          title: '更新状态',
+          key: 'updateStatus',
+      width: 120,
+          render: (text: any, record: TikTokAccount) => {
+            const ipStatus = record.IPStatus;
+            const proxy = record.LastProxy || '服务器IP';
+            const statusColor = getIPStatusColor(ipStatus);
+            const statusText = ipStatus === 1 ? '成功' : ipStatus === 0 ? '失败' : '未知';
+            
             return (
-              <Tag color={getIPStatusColor(status)}>
-                {status === 'success' ? '成功' : status === 'failed' ? '失败' : status}
-              </Tag>
+              <div>
+                <Tag color={statusColor}>{statusText}</Tag>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                  {proxy}
+                </div>
+              </div>
             );
           },
         },
@@ -506,18 +530,10 @@ const TikTokAccountList: React.FC = () => {
     {
       title: '其他信息',
       children: [
-        {
-          title: '备注',
-          dataIndex: 'Remark',
-          key: 'remark',
-          width: 120,
-          ellipsis: true,
-          render: (text: string) => text || '-',
-        },
-        {
-          title: '创建时间',
-          dataIndex: 'CreatedAt',
-          key: 'createdAt',
+    {
+      title: '创建时间',
+      dataIndex: 'CreatedAt',
+      key: 'createdAt',
           width: 140,
           render: (text: string) => text ? new Date(text).toLocaleString() : '-',
         },
@@ -574,14 +590,14 @@ const TikTokAccountList: React.FC = () => {
             <Input placeholder="请输入账号名" style={{ width: 150 }} />
           </Form.Item>
           <Col span={6}>
-            <Form.Item name="status" label="状态">
+          <Form.Item name="status" label="状态">
               <Select placeholder="请选择状态" allowClear>
                 <Option value="养号">养号</Option>
                 <Option value="售出">售出</Option>
-                <Option value="封禁">封禁</Option>
+              <Option value="封禁">封禁</Option>
                 <Option value="异常">异常</Option>
-              </Select>
-            </Form.Item>
+            </Select>
+          </Form.Item>
           </Col>
           <Form.Item name="usage" label="用途">
             <Select placeholder="请选择用途" style={{ width: 120 }}>

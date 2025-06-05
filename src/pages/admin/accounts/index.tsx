@@ -59,6 +59,7 @@ const AdminTikTokAccountList: React.FC = () => {
           Nickname: account.Nickname || account.nickname,
           CountryID: account.CountryID || account.country_id,
           WindowOpen: account.WindowOpen || account.window_open,
+          RegTime: account.RegTime || account.reg_time,
           Status: account.Status || account.status || '未知',
           Usage: account.Usage || account.usage || '未知',
           CreatedBy: account.CreatedBy || account.created_by,
@@ -73,7 +74,9 @@ const AdminTikTokAccountList: React.FC = () => {
           VideosDiff7: account.VideosDiff7 || account.videos_diff_7 || 0,
           VideosDiff30: account.VideosDiff30 || account.videos_diff_30 || 0,
           SpiderLastUpdateAt: account.SpiderLastUpdateAt || account.spider_last_update_at,
+          SpiderLastFailureAt: account.SpiderLastFailureAt || account.spider_last_failure_at,
           IPStatus: account.IPStatus || account.ip_status,
+          LastProxy: account.LastProxy || account.last_proxy,
           CreatedAt: account.CreatedAt || account.created_at,
           UpdatedAt: account.UpdatedAt || account.updated_at || account.CreatedAt || account.created_at,
           Remark: account.Remark || account.remark || '',
@@ -288,12 +291,10 @@ const AdminTikTokAccountList: React.FC = () => {
     }
   };
 
-  const getIPStatusColor = (status: string) => {
-    switch (status) {
-      case '正常': return 'green';
-      case '异常': return 'red';
-      default: return 'default';
-    }
+  const getIPStatusColor = (status: number | undefined) => {
+    if (status === 1) return 'green'; // 成功状态，绿色
+    if (status === 0) return 'red';   // 失败状态，红色
+    return 'default'; // 未知状态
   };
 
   const getDiffColor = (diff: number) => {
@@ -344,6 +345,13 @@ const AdminTikTokAccountList: React.FC = () => {
           render: (text) => text ? dayjs(text).format('YYYY-MM-DD') : '-',
         },
         {
+          title: '注册日期',
+          dataIndex: 'RegTime',
+          key: 'RegTime',
+          width: 100,
+          render: (text) => text || '-',
+        },
+        {
           title: '状态',
           dataIndex: 'Status',
           key: 'Status',
@@ -359,6 +367,13 @@ const AdminTikTokAccountList: React.FC = () => {
           dataIndex: 'Usage',
           key: 'Usage',
           width: 100,
+          render: (text) => text || '-',
+        },
+        {
+          title: '备注',
+          dataIndex: 'Remark',
+          key: 'Remark',
+          width: 120,
           render: (text) => text || '-',
         },
       ],
@@ -479,22 +494,35 @@ const AdminTikTokAccountList: React.FC = () => {
       title: '爬虫信息',
       children: [
         {
-          title: '数据更新时间',
-          dataIndex: 'SpiderLastUpdateAt',
-          key: 'SpiderLastUpdateAt',
-          width: 120,
-          render: (text) => text ? dayjs(text).format('MM-DD HH:mm') : '-',
+          title: '更新时间',
+          key: 'updateTime',
+          width: 140,
+          render: (text, record: TikTokAccount) => {
+            const updateTime = record.IPStatus === 1 
+              ? record.SpiderLastUpdateAt 
+              : record.SpiderLastFailureAt;
+            return updateTime ? new Date(updateTime).toLocaleString() : '-';
+          },
         },
         {
-          title: 'IP状态',
-          dataIndex: 'IPStatus',
-          key: 'IPStatus',
-          width: 80,
-          render: (status) => (
-            <Tag color={getIPStatusColor(status)}>
-              {status || '未知'}
-            </Tag>
-          ),
+          title: '更新状态',
+          key: 'updateStatus',
+          width: 120,
+          render: (text, record: TikTokAccount) => {
+            const ipStatus = record.IPStatus;
+            const proxy = record.LastProxy || '服务器IP';
+            const statusColor = getIPStatusColor(ipStatus);
+            const statusText = ipStatus === 1 ? '成功' : ipStatus === 0 ? '失败' : '未知';
+            
+            return (
+              <div>
+                <Tag color={statusColor}>{statusText}</Tag>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                  {proxy}
+                </div>
+              </div>
+            );
+          },
         },
       ],
     },
@@ -502,18 +530,11 @@ const AdminTikTokAccountList: React.FC = () => {
       title: '其他信息',
       children: [
         {
-          title: '备注',
-          dataIndex: 'Remark',
-          key: 'Remark',
-          width: 120,
-          render: (text) => text || '-',
-        },
-        {
           title: '创建时间',
           dataIndex: 'CreatedAt',
           key: 'CreatedAt',
-          width: 120,
-          render: (text) => text ? dayjs(text).format('MM-DD HH:mm') : '-',
+          width: 140,
+          render: (text) => text ? new Date(text).toLocaleString() : '-',
         },
         {
           title: '操作',

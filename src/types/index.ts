@@ -70,6 +70,7 @@ export interface TikTokAccount {
   Nickname?: string;
   CountryID: number;
   WindowOpen: string; // YYYY-MM-DD format
+  RegTime?: string; // 账号注册日期
   Status: string;
   Usage: string;
   Remark?: string;
@@ -85,7 +86,9 @@ export interface TikTokAccount {
   VideosDiff7: number;
   VideosDiff30: number;
   SpiderLastUpdateAt?: string;
-  IPStatus?: string;
+  SpiderLastFailureAt?: string;
+  IPStatus?: number; // 更新状态：1=成功，0=失败
+  LastProxy?: string; // 代理IP地址
   CreatedAt: string;
   UpdatedAt: string;
 }
