@@ -132,7 +132,8 @@ const Login: React.FC = () => {
         </Card>
         <div className="login-footer">
           <Typography.Text type="secondary">
-            © {new Date().getFullYear()} TikTok Admin. All Rights Reserved.
+            © 2025 TikTok Admin. All Rights Reserved.<br />
+            Version 1.0.0
           </Typography.Text>
         </div>
       </div>
