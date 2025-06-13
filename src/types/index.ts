@@ -75,6 +75,7 @@ export interface TikTokAccount {
   Usage: string;
   Remark?: string;
   CreatedBy: number;
+  created_by_username?: string; // 创建人用户名
   TodayFans: number;
   TodayVideos: number;
   FansDiff1: number;
@@ -116,6 +117,8 @@ export interface TikTokAccountQueryParams extends PaginationParams {
   usage?: string;
   created_at_start?: string; // YYYY-MM-DD format
   created_at_end?: string; // YYYY-MM-DD format
+  sort_by?: string;
+  order?: string;
 }
 
 // Account Metrics types

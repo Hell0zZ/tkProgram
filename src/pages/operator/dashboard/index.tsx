@@ -357,7 +357,11 @@ const OperatorDashboard: React.FC = () => {
     <div style={{ padding: '24px' }}>
       <Title level={2}>
         <UserOutlined style={{ marginRight: 8 }} />
-        {userInfo.groupName}-{userInfo.username} 的运营控制台
+        {userInfo.groupName.includes(userInfo.username)
+          ? userInfo.groupName
+          : `${userInfo.groupName}-${userInfo.username}`
+        }
+         的运营控制台
       </Title>
       <Paragraph type="secondary">
         欢迎使用 TikTok 运营管理系统，这里是您的工作中心。

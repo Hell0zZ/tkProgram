@@ -21,6 +21,8 @@ import type { ColumnsType } from 'antd/es/table';
 import * as operatorService from '@/services/operator';
 import * as commonService from '@/services/common';
 import dayjs from 'dayjs';
+import moment from 'moment';
+import axios from 'axios';
 
 const { Option } = Select;
 
@@ -37,6 +39,7 @@ const AdminTikTokAccountList: React.FC = () => {
     pageSize: 10,
     total: 0,
   });
+  const [operators, setOperators] = useState<any[]>([]);
 
   const loadData = async (page = pagination.current, pageSize = pagination.pageSize, searchParams = {}) => {
     try {
@@ -44,7 +47,7 @@ const AdminTikTokAccountList: React.FC = () => {
       console.log('管理员页面：开始加载账号列表:', { page, pageSize, searchParams });
       
       const response = await operatorService.getTikTokAccounts({ 
-        page, 
+        page,
         pageSize,
         ...searchParams
       });
@@ -80,6 +83,7 @@ const AdminTikTokAccountList: React.FC = () => {
           CreatedAt: account.CreatedAt || account.created_at,
           UpdatedAt: account.UpdatedAt || account.updated_at || account.CreatedAt || account.created_at,
           Remark: account.Remark || account.remark || '',
+          CreatedByUsername: account.CreatedByUsername || account.created_by_username,
         }));
         
         setAccounts(normalizedAccounts);
@@ -165,9 +169,26 @@ const AdminTikTokAccountList: React.FC = () => {
     }
   };
 
+  const fetchOperators = async () => {
+    try {
+      const response = await fetch('/api/admin/operators?page=1&page_size=1000', {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        }
+      });
+      const res = await response.json();
+      if (res.Code === 0 && res.Data && res.Data.items) {
+        setOperators(res.Data.items);
+      }
+    } catch (error) {
+      console.error('获取运营人员列表失败:', error);
+    }
+  };
+
   useEffect(() => {
     loadData();
     loadCountries();
+    fetchOperators();
   }, []);
 
   const handleAdd = () => {
@@ -269,8 +290,19 @@ const AdminTikTokAccountList: React.FC = () => {
     if (values.country_id) {
       searchParams.country_id = values.country_id;
     }
+    if (values.created_by) {
+      searchParams.created_by = values.created_by;
+    }
     if (values.status) {
       searchParams.status = values.status;
+    }
+    if (values.remark) {
+      searchParams.remark = values.remark;
+    }
+    if (values.created_at_range) {
+      searchParams.created_at_start = values.created_at_range[0]?.format('YYYY-MM-DD');
+      searchParams.created_at_end = values.created_at_range[1]?.format('YYYY-MM-DD');
+      delete searchParams.created_at_range;
     }
     
     loadData(1, pagination.pageSize, searchParams);
@@ -348,7 +380,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '注册日期',
           dataIndex: 'RegTime',
           key: 'RegTime',
-          width: 100,
+          width: 120,
           render: (text) => text || '-',
         },
         {
@@ -385,14 +417,16 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '当前粉丝',
           dataIndex: 'TodayFans',
           key: 'TodayFans',
-          width: 90,
+          width: 120,
+          sorter: true,
+          sortDirections: ['ascend', 'descend'],
           render: (value) => value?.toLocaleString() || '0',
         },
         {
           title: '昨日对比',
           dataIndex: 'FansDiff1',
           key: 'FansDiff1',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -403,7 +437,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '3日对比',
           dataIndex: 'FansDiff3',
           key: 'FansDiff3',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -414,7 +448,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '7日对比',
           dataIndex: 'FansDiff7',
           key: 'FansDiff7',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -425,7 +459,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '30日对比',
           dataIndex: 'FansDiff30',
           key: 'FansDiff30',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -441,14 +475,14 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '当前视频',
           dataIndex: 'TodayVideos',
           key: 'TodayVideos',
-          width: 90,
+          width: 100,
           render: (value) => value?.toLocaleString() || '0',
         },
         {
           title: '昨日对比',
           dataIndex: 'VideosDiff1',
           key: 'VideosDiff1',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -459,7 +493,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '3日对比',
           dataIndex: 'VideosDiff3',
           key: 'VideosDiff3',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -470,7 +504,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '7日对比',
           dataIndex: 'VideosDiff7',
           key: 'VideosDiff7',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -481,7 +515,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '30日对比',
           dataIndex: 'VideosDiff30',
           key: 'VideosDiff30',
-          width: 80,
+          width: 100,
           render: (diff) => (
             <span style={{ color: getDiffColor(diff) }}>
               {formatDiff(diff)}
@@ -491,7 +525,7 @@ const AdminTikTokAccountList: React.FC = () => {
       ],
     },
     {
-      title: '爬虫信息',
+      title: '其它信息',
       children: [
         {
           title: '更新时间',
@@ -524,20 +558,26 @@ const AdminTikTokAccountList: React.FC = () => {
             );
           },
         },
-      ],
-    },
-    {
-      title: '其他信息',
-      children: [
+        {
+          title: '创建人',
+          dataIndex: 'CreatedByUsername',
+          key: 'CreatedByUsername',
+          width: 100,
+        },
         {
           title: '创建时间',
           dataIndex: 'CreatedAt',
           key: 'CreatedAt',
           width: 140,
-          render: (text) => text ? new Date(text).toLocaleString() : '-',
+          render: (text: string) => text ? new Date(text).toLocaleString() : '-',
         },
+      ],
+    },
+    {
+      title: '账号编辑',
+      children: [
         {
-          title: '操作',
+          title: '',
           key: 'action',
           width: 180,
           fixed: 'right' as const,
@@ -575,48 +615,90 @@ const AdminTikTokAccountList: React.FC = () => {
 
   return (
     <div>
-      <Card style={{ marginBottom: 16 }}>
+      <Card title="搜索条件" style={{ marginBottom: 16 }}>
         <Form
           form={searchForm}
-          layout="horizontal"
+          layout="vertical"
           onFinish={handleSearch}
         >
-          <Row gutter={16}>
-            <Col span={6}>
-              <Form.Item name="account_name" label="账号名">
-                <Input placeholder="请输入账号名" />
+          <Row gutter={16} align="bottom">
+            <Col>
+              <Form.Item name="account_name" label="账号名称">
+                <Input placeholder="请输入账号名称" allowClear style={{ width: 160 }} />
               </Form.Item>
             </Col>
-            <Col span={6}>
+            <Col>
+              <Form.Item name="remark" label="备注">
+                <Input placeholder="请输入备注关键词" allowClear style={{ width: 160 }} />
+              </Form.Item>
+            </Col>
+            <Col>
               <Form.Item name="country_id" label="国家">
-                <Select placeholder="请选择国家" allowClear>
+                <Select placeholder="请选择国家" allowClear style={{ width: 120 }}>
                   {countries.map(country => (
-                    <Option key={country.ID} value={country.ID}>
+                    <Select.Option key={country.ID} value={country.ID}>
                       {country.Name}
-                    </Option>
+                    </Select.Option>
                   ))}
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={6}>
-              <Form.Item name="status" label="状态">
-                <Select placeholder="请选择状态" allowClear>
-                  <Option value="养号">养号</Option>
-                  <Option value="售出">售出</Option>
-                  <Option value="封禁">封禁</Option>
-                  <Option value="异常">异常</Option>
+            <Col>
+              <Form.Item name="created_by" label="运营人员">
+                <Select
+                  placeholder="请选择运营人员"
+                  allowClear
+                  showSearch
+                  style={{ width: 140 }}
+                  optionFilterProp="children"
+                  filterOption={(input, option) =>
+                    ((option?.children ?? '') as string).toLowerCase().includes(input.toLowerCase())
+                  }
+                >
+                  {operators.map(op => (
+                    <Select.Option key={op.ID} value={op.Username}>
+                      {op.Username}
+                    </Select.Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>
-            <Col span={6}>
-              <Space>
-                <Button type="primary" htmlType="submit">
-                  搜索
-                </Button>
-                <Button onClick={handleReset}>
-                  重置
-                </Button>
-              </Space>
+            <Col>
+              <Form.Item name="status" label="状态">
+                <Select placeholder="请选择状态" allowClear style={{ width: 120 }}>
+                  <Select.Option value="养号">养号</Select.Option>
+                  <Select.Option value="售出">售出</Select.Option>
+                  <Select.Option value="异常">异常</Select.Option>
+                  <Select.Option value="封禁">封禁</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item name="usage" label="用途">
+                <Select placeholder="请选择用途" allowClear style={{ width: 120 }}>
+                  <Select.Option value="起号">起号</Select.Option>
+                  <Select.Option value="中视频">中视频</Select.Option>
+                  <Select.Option value="星图">星图</Select.Option>
+                  <Select.Option value="短视频">短视频</Select.Option>
+                </Select>
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item name="created_at_range" label="创建时间">
+                <DatePicker.RangePicker style={{ width: 260 }} />
+              </Form.Item>
+            </Col>
+            <Col>
+              <Form.Item>
+                <Space>
+                  <Button type="primary" htmlType="submit">
+                    搜索
+                  </Button>
+                  <Button onClick={handleReset}>
+                    重置
+                  </Button>
+                </Space>
+              </Form.Item>
             </Col>
           </Row>
         </Form>
@@ -635,16 +717,32 @@ const AdminTikTokAccountList: React.FC = () => {
           dataSource={accounts}
           rowKey="ID"
           loading={loading}
+          scroll={{ x: 2000 }}
           pagination={{
             ...pagination,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total) => `共 ${total} 条记录`,
+            showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
             onChange: (page, pageSize) => loadData(page, pageSize),
-            onShowSizeChange: (current, size) => loadData(current, size),
           }}
-          scroll={{ x: 1800 }}
-          size="small"
+          onChange={(pagination, filters, sorter) => {
+            if (sorter && !Array.isArray(sorter) && sorter.field === 'TodayFans') {
+              // 获取当前搜索条件
+              const formValues = searchForm.getFieldsValue();
+              const searchParams = {
+                ...formValues,
+                sort_by: 'follower_count',
+                order: sorter.order === 'ascend' ? 'asc' : 'desc'
+              };
+              // 处理日期范围
+              if (formValues.created_at_range) {
+                searchParams.created_at_start = formValues.created_at_range[0]?.format('YYYY-MM-DD');
+                searchParams.created_at_end = formValues.created_at_range[1]?.format('YYYY-MM-DD');
+                delete searchParams.created_at_range;
+              }
+              loadData(pagination?.current || 1, pagination?.pageSize || 10, searchParams);
+            }
+          }}
         />
       </Card>
 
