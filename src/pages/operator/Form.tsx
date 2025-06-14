@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Card, Select, message } from 'antd';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../config';
 
 interface OperatorForm {
   username: string;
@@ -24,7 +25,7 @@ const OperatorForm: React.FC = () => {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('http://localhost:8080/api/admin/groups', {
+      const response = await axios.get(API_ENDPOINTS.GROUPS, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -40,7 +41,7 @@ const OperatorForm: React.FC = () => {
   const fetchOperator = async () => {
     if (!id) return;
     try {
-      const response = await axios.get(`http://localhost:8080/api/admin/operators/${id}`, {
+      const response = await axios.get(`${API_ENDPOINTS.OPERATORS}/${id}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -64,8 +65,8 @@ const OperatorForm: React.FC = () => {
     try {
       setLoading(true);
       const url = id
-        ? `http://localhost:8080/api/admin/operators/${id}`
-        : 'http://localhost:8080/api/admin/operators';
+        ? `${API_ENDPOINTS.OPERATORS}/${id}`
+        : API_ENDPOINTS.OPERATORS;
       const method = id ? 'put' : 'post';
       const response = await axios[method](url, values, {
         headers: {

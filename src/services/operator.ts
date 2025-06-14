@@ -8,6 +8,7 @@ import type {
   PaginatedResponse,
   ApiResponse,
   UserInfo,
+  DashboardStats,
 } from '@/types';
 
 // TikTok Account APIs
@@ -47,4 +48,9 @@ export const getAccountMetrics = async (accountId: number): Promise<ApiResponse<
 // User Info APIs
 export const getCurrentUserInfo = async (): Promise<ApiResponse<UserInfo>> => {
   return request.get('/api/user/info');
+};
+
+// Dashboard Stats APIs
+export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
+  return request.get('/api/account/dashboard/stats');
 }; 

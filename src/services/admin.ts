@@ -15,6 +15,7 @@ import type {
   UpdateTikTokAccountParams,
   TikTokAccountQueryParams,
   AccountMetrics,
+  DashboardStats,
 } from '@/types';
 
 // Group APIs
@@ -153,4 +154,9 @@ export const getAccountMetrics = async (accountId: number): Promise<ApiResponse<
 // Export API
 export const exportAccounts = async () => {
   return request.get('/api/admin/export/accounts', { responseType: 'blob' });
+};
+
+// Dashboard Stats APIs
+export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
+  return request.get('/api/account/dashboard/stats');
 }; 

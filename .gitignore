@@ -1,4 +1,12 @@
+# 构建输出
 dist/
+
+# 依赖
 node_modules/
+
+# 环境配置
+.env
+
+# 项目特定文件
 API.json
 APIDoc.txt

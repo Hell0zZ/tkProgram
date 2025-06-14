@@ -3,6 +3,7 @@ import { Table, Button, Space, message, Modal } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import { API_ENDPOINTS } from '../../config';
 
 interface Operator {
   id: number;
@@ -25,7 +26,7 @@ const OperatorList: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('http://localhost:8080/api/admin/operators', {
+      const response = await axios.get(API_ENDPOINTS.OPERATORS, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
@@ -46,7 +47,7 @@ const OperatorList: React.FC = () => {
       content: '确定要删除这个运营人员吗？',
       onOk: async () => {
         try {
-          const response = await axios.delete(`http://localhost:8080/api/admin/operators/${id}`, {
+          const response = await axios.delete(`${API_ENDPOINTS.OPERATORS}/${id}`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem('token')}`,
             },

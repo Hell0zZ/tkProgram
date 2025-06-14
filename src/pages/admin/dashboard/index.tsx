@@ -9,6 +9,7 @@ import {
   Tag,
   Typography,
   Divider,
+  Progress,
 } from 'antd';
 import {
   UserOutlined,
@@ -16,9 +17,11 @@ import {
   GlobalOutlined,
   FileTextOutlined,
   SettingOutlined,
+  RiseOutlined,
+  VideoCameraOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import type { Operator } from '@/types';
+import type { Operator, DashboardStats } from '@/types';
 import * as adminService from '@/services/admin';
 
 const { Title, Paragraph } = Typography;
@@ -30,7 +33,15 @@ const AdminDashboard: React.FC = () => {
     totalOperators: 0,
     totalGroups: 0,
     totalProxies: 0,
+    totalAccounts: 0,
+    normalAccounts: 0,
+    bannedAccounts: 0,
+    restrictedAccounts: 0,
+    shouChuAccounts: 0,
+    totalFans: 0,
+    totalVideos: 0,
   });
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [recentOperators, setRecentOperators] = useState<Operator[]>([]);
 
   const loadStats = async () => {
@@ -38,10 +49,11 @@ const AdminDashboard: React.FC = () => {
       setLoading(true);
       
       // 并行获取统计数据
-      const [operatorsRes, groupsRes, proxiesRes] = await Promise.all([
+      const [operatorsRes, groupsRes, proxiesRes, dashboardRes] = await Promise.all([
         adminService.getOperators({ page: 1, pageSize: 5 }),
         adminService.getAllGroups(),
         adminService.getProxies({ page: 1, pageSize: 1 }),
+        adminService.getDashboardStats(),
       ]);
 
       if (operatorsRes.Code === 0) {
@@ -55,6 +67,21 @@ const AdminDashboard: React.FC = () => {
 
       if (proxiesRes.Code === 0) {
         setStats(prev => ({ ...prev, totalProxies: proxiesRes.Data.total }));
+      }
+
+      if (dashboardRes.Code === 0 && dashboardRes.Data) {
+        setDashboardStats(dashboardRes.Data);
+        setStats(prev => ({
+          ...prev,
+          totalAccounts: dashboardRes.Data.total_accounts,
+          normalAccounts: dashboardRes.Data.status_stats['养号']?.count || 0,
+          bannedAccounts: dashboardRes.Data.status_stats['封禁']?.count || 0,
+          restrictedAccounts: dashboardRes.Data.status_stats['异常']?.count || 0,
+          shouChuAccounts: dashboardRes.Data.status_stats['售出']?.count || 0,
+          totalFans: dashboardRes.Data.total_fans,
+          totalVideos: dashboardRes.Data.total_videos,
+        }));
+        console.log('管理员控制台TikTok统计数据加载成功:', dashboardRes.Data);
       }
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -177,6 +204,106 @@ const AdminDashboard: React.FC = () => {
               value={stats.totalProxies}
               prefix={<GlobalOutlined />}
               valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* TikTok账号统计 */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="账号总数"
+              value={stats.totalAccounts}
+              prefix={<UserOutlined />}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="总粉丝数"
+              value={stats.totalFans}
+              prefix={<RiseOutlined />}
+              valueStyle={{ color: '#52c41a' }}
+              formatter={(value) => `${Number(value).toLocaleString()}`}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="总视频数"
+              value={stats.totalVideos}
+              prefix={<VideoCameraOutlined />}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ marginBottom: 8, fontSize: 14, color: '#666' }}>账号健康度</div>
+              <Progress
+                type="circle"
+                percent={dashboardStats ? Math.round(dashboardStats.health_rate * 10) / 10 : 0}
+                width={80}
+                strokeColor={
+                  dashboardStats && dashboardStats.health_rate >= 80 
+                    ? '#52c41a' 
+                    : dashboardStats && dashboardStats.health_rate >= 60 
+                    ? '#faad14' 
+                    : '#ff4d4f'
+                }
+                format={(percent) => `${percent?.toFixed(1)}%`}
+              />
+              {dashboardStats && (
+                <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+                  健康{dashboardStats.healthy_accounts}，总数：{dashboardStats.total_accounts}
+                </div>
+              )}
+            </div>
+          </Card>
+        </Col>
+      </Row>
+
+      {/* 账号状态分布 */}
+      <Row gutter={16} style={{ marginBottom: 24 }}>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="养号账号"
+              value={stats.normalAccounts}
+              valueStyle={{ color: '#1890ff' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="异常账号"
+              value={stats.restrictedAccounts}
+              valueStyle={{ color: '#faad14' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="封禁账号"
+              value={stats.bannedAccounts}
+              valueStyle={{ color: '#ff4d4f' }}
+            />
+          </Card>
+        </Col>
+        <Col span={6}>
+          <Card>
+            <Statistic
+              title="已售出账号"
+              value={stats.shouChuAccounts}
+              valueStyle={{ color: '#52c41a' }}
             />
           </Card>
         </Col>

@@ -20,7 +20,7 @@ import {
   BarChartOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import type { TikTokAccount, Country } from '@/types';
+import type { TikTokAccount, Country, DashboardStats } from '@/types';
 import * as operatorService from '@/services/operator';
 import * as commonService from '@/services/common';
 
@@ -42,6 +42,7 @@ const OperatorDashboard: React.FC = () => {
     totalFans: 0,
     totalVideos: 0,
   });
+  const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [recentAccounts, setRecentAccounts] = useState<TikTokAccount[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
 
@@ -109,6 +110,40 @@ const OperatorDashboard: React.FC = () => {
     } catch (error) {
       console.error('获取用户信息失败:', error);
       setUserInfo({ username: '未知用户', groupName: '未知组' });
+    }
+  };
+
+  const loadDashboardStats = async () => {
+    try {
+      console.log('开始获取仪表板统计数据...');
+      const response = await operatorService.getDashboardStats();
+      console.log('仪表板统计数据API响应:', response);
+      
+      if (response.Code === 0 && response.Data) {
+        setDashboardStats(response.Data);
+        
+        // 同时更新旧的 stats 结构以保持兼容性
+        const newStats = {
+          totalAccounts: response.Data.total_accounts,
+          normalAccounts: response.Data.status_stats['养号']?.count || 0,
+          bannedAccounts: response.Data.status_stats['封禁']?.count || 0,
+          restrictedAccounts: response.Data.status_stats['异常']?.count || 0,
+          shouChuAccounts: response.Data.status_stats['售出']?.count || 0,
+          totalFans: response.Data.total_fans,
+          totalVideos: response.Data.total_videos,
+        };
+        setStats(newStats);
+        
+        console.log('仪表板统计数据设置成功:', newStats);
+      } else {
+        console.warn('仪表板统计数据API返回错误:', response.Message);
+        // API失败时使用原有的统计逻辑
+        await loadStats();
+      }
+    } catch (error) {
+      console.error('获取仪表板统计数据失败:', error);
+      // API失败时使用原有的统计逻辑
+      await loadStats();
     }
   };
 
@@ -263,7 +298,7 @@ const OperatorDashboard: React.FC = () => {
 
   useEffect(() => {
     loadUserInfo();
-    loadStats();
+    loadDashboardStats();
   }, []);
 
   const getCountryName = (countryId: number) => {
@@ -351,7 +386,11 @@ const OperatorDashboard: React.FC = () => {
     },
   ];
 
-  const healthScore = Math.round((stats.normalAccounts / Math.max(stats.totalAccounts, 1)) * 100);
+  const healthScore = dashboardStats 
+    ? Math.round(dashboardStats.health_rate * 10) / 10
+    : Math.round((stats.normalAccounts / Math.max(stats.totalAccounts, 1)) * 100);
+    
+
 
   return (
     <div style={{ padding: '24px' }}>
@@ -409,7 +448,13 @@ const OperatorDashboard: React.FC = () => {
                 percent={healthScore}
                 width={80}
                 strokeColor={healthScore >= 80 ? '#52c41a' : healthScore >= 60 ? '#faad14' : '#ff4d4f'}
+                format={(percent) => `${percent?.toFixed(1)}%`}
               />
+              {dashboardStats && (
+                <div style={{ fontSize: 12, color: '#666', marginTop: 8 }}>
+                  健康{dashboardStats.healthy_accounts}，总数：{dashboardStats.total_accounts}
+                </div>
+              )}
             </div>
           </Card>
         </Col>
@@ -423,7 +468,6 @@ const OperatorDashboard: React.FC = () => {
               title="养号账号"
               value={stats.normalAccounts}
               valueStyle={{ color: '#1890ff' }}
-              suffix={`/ ${stats.totalAccounts}`}
             />
           </Card>
         </Col>
@@ -433,7 +477,6 @@ const OperatorDashboard: React.FC = () => {
               title="异常账号"
               value={stats.restrictedAccounts}
               valueStyle={{ color: '#faad14' }}
-              suffix={`/ ${stats.totalAccounts}`}
             />
           </Card>
         </Col>
@@ -443,7 +486,6 @@ const OperatorDashboard: React.FC = () => {
               title="封禁账号"
               value={stats.bannedAccounts}
               valueStyle={{ color: '#ff4d4f' }}
-              suffix={`/ ${stats.totalAccounts}`}
             />
           </Card>
         </Col>
@@ -453,7 +495,6 @@ const OperatorDashboard: React.FC = () => {
               title="已售出账号"
               value={stats.shouChuAccounts}
               valueStyle={{ color: '#52c41a' }}
-              suffix={`/ ${stats.totalAccounts}`}
             />
           </Card>
         </Col>

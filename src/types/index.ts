@@ -162,4 +162,19 @@ export interface UserInfo {
   role: 'admin' | 'operator';
   group_id: number;
   group_name: string;
+}
+
+// Dashboard Stats types
+export interface DashboardStats {
+  total_accounts: number;
+  total_fans: number;
+  total_videos: number;
+  healthy_accounts: number;
+  unhealthy_accounts: number;
+  health_rate: number;
+  status_stats: {
+    [status: string]: {
+      count: number;
+    };
+  };
 } 
