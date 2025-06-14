@@ -35,6 +35,7 @@ const AdminDashboard: React.FC = () => {
     totalProxies: 0,
     totalAccounts: 0,
     normalAccounts: 0,
+    usingAccounts: 0,
     bannedAccounts: 0,
     restrictedAccounts: 0,
     shouChuAccounts: 0,
@@ -75,6 +76,7 @@ const AdminDashboard: React.FC = () => {
           ...prev,
           totalAccounts: dashboardRes.Data.total_accounts,
           normalAccounts: dashboardRes.Data.status_stats['养号']?.count || 0,
+          usingAccounts: dashboardRes.Data.status_stats['使用']?.count || 0,
           bannedAccounts: dashboardRes.Data.status_stats['封禁']?.count || 0,
           restrictedAccounts: dashboardRes.Data.status_stats['异常']?.count || 0,
           shouChuAccounts: dashboardRes.Data.status_stats['售出']?.count || 0,
@@ -270,8 +272,8 @@ const AdminDashboard: React.FC = () => {
       </Row>
 
       {/* 账号状态分布 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
+      <Row gutter={[12, 0]} style={{ marginBottom: 24 }}>
+        <Col flex="1">
           <Card>
             <Statistic
               title="养号账号"
@@ -280,7 +282,16 @@ const AdminDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col flex="1">
+          <Card>
+            <Statistic
+              title="使用中账号"
+              value={stats.usingAccounts}
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Card>
+        </Col>
+        <Col flex="1">
           <Card>
             <Statistic
               title="异常账号"
@@ -289,7 +300,7 @@ const AdminDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col flex="1">
           <Card>
             <Statistic
               title="封禁账号"
@@ -298,7 +309,7 @@ const AdminDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col flex="1">
           <Card>
             <Statistic
               title="已售出账号"

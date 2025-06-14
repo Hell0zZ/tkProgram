@@ -37,6 +37,11 @@ const AdminTikTokAccountList: React.FC = () => {
     pageSize: 10,
     total: 0,
   });
+  const [sortInfo, setSortInfo] = useState<{
+    sort_by?: string;
+    order?: string;
+  }>({});
+  const [currentSearchParams, setCurrentSearchParams] = useState<any>({});
   const [operators, setOperators] = useState<any[]>([]);
 
   const loadData = async (page = pagination.current, pageSize = pagination.pageSize, searchParams = {}) => {
@@ -47,6 +52,7 @@ const AdminTikTokAccountList: React.FC = () => {
       const response = await operatorService.getTikTokAccounts({ 
         page,
         pageSize,
+        ...sortInfo,
         ...searchParams
       });
       
@@ -303,17 +309,21 @@ const AdminTikTokAccountList: React.FC = () => {
       delete searchParams.created_at_range;
     }
     
+    // 保存当前搜索条件
+    setCurrentSearchParams(searchParams);
     loadData(1, pagination.pageSize, searchParams);
   };
 
   const handleReset = () => {
     searchForm.resetFields();
+    setCurrentSearchParams({});
     loadData(1, pagination.pageSize);
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
       case '养号': return 'blue';
+      case '使用': return 'purple';
       case '售出': return 'green';
       case '封禁': return 'red';
       case '异常': return 'orange';
@@ -665,6 +675,7 @@ const AdminTikTokAccountList: React.FC = () => {
               <Form.Item name="status" label="状态">
                 <Select placeholder="请选择状态" allowClear style={{ width: 120 }}>
                   <Select.Option value="养号">养号</Select.Option>
+                  <Select.Option value="使用">使用</Select.Option>
                   <Select.Option value="售出">售出</Select.Option>
                   <Select.Option value="异常">异常</Select.Option>
                   <Select.Option value="封禁">封禁</Select.Option>
@@ -721,16 +732,22 @@ const AdminTikTokAccountList: React.FC = () => {
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
-            onChange: (page, pageSize) => loadData(page, pageSize),
+            onChange: (page, pageSize) => loadData(page, pageSize, currentSearchParams),
           }}
           onChange={(pagination, _filters, sorter) => {
             if (sorter && !Array.isArray(sorter) && sorter.field === 'TodayFans') {
+              // 更新排序信息
+              const newSortInfo = {
+                sort_by: 'follower_count',
+                order: sorter.order === 'ascend' ? 'asc' : 'desc'
+              };
+              setSortInfo(newSortInfo);
+              
               // 获取当前搜索条件
               const formValues = searchForm.getFieldsValue();
               const searchParams = {
                 ...formValues,
-                sort_by: 'follower_count',
-                order: sorter.order === 'ascend' ? 'asc' : 'desc'
+                ...newSortInfo
               };
               // 处理日期范围
               if (formValues.created_at_range) {
@@ -739,6 +756,9 @@ const AdminTikTokAccountList: React.FC = () => {
                 delete searchParams.created_at_range;
               }
               loadData(pagination?.current || 1, pagination?.pageSize || 10, searchParams);
+            } else if (!sorter || Array.isArray(sorter) || !sorter.order) {
+              // 清除排序
+              setSortInfo({});
             }
           }}
         />
@@ -795,6 +815,7 @@ const AdminTikTokAccountList: React.FC = () => {
           >
             <Select placeholder="请选择状态（可选）" allowClear>
               <Option value="养号">养号</Option>
+              <Option value="使用">使用</Option>
               <Option value="售出">售出</Option>
               <Option value="封禁">封禁</Option>
               <Option value="异常">异常</Option>

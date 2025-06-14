@@ -36,6 +36,7 @@ const OperatorDashboard: React.FC = () => {
   const [stats, setStats] = useState({
     totalAccounts: 0,
     normalAccounts: 0,
+    usingAccounts: 0,
     bannedAccounts: 0,
     restrictedAccounts: 0,
     shouChuAccounts: 0,
@@ -126,6 +127,7 @@ const OperatorDashboard: React.FC = () => {
         const newStats = {
           totalAccounts: response.Data.total_accounts,
           normalAccounts: response.Data.status_stats['养号']?.count || 0,
+          usingAccounts: response.Data.status_stats['使用']?.count || 0,
           bannedAccounts: response.Data.status_stats['封禁']?.count || 0,
           restrictedAccounts: response.Data.status_stats['异常']?.count || 0,
           shouChuAccounts: response.Data.status_stats['售出']?.count || 0,
@@ -237,6 +239,7 @@ const OperatorDashboard: React.FC = () => {
         // 计算统计数据
         const totalAccounts = accountsRes.Data.total || 0;
         const yangHaoAccounts = normalizedAccounts.filter((acc: any) => acc.Status === '养号').length;
+        const usingAccounts = normalizedAccounts.filter((acc: any) => acc.Status === '使用').length;
         const shouChuAccounts = normalizedAccounts.filter((acc: any) => acc.Status === '售出').length;
         const bannedAccounts = normalizedAccounts.filter((acc: any) => acc.Status === '封禁').length;
         const yiChangAccounts = normalizedAccounts.filter((acc: any) => acc.Status === '异常').length;
@@ -246,6 +249,7 @@ const OperatorDashboard: React.FC = () => {
         setStats({
           totalAccounts,
           normalAccounts: yangHaoAccounts,
+          usingAccounts,
           bannedAccounts,
           restrictedAccounts: yiChangAccounts,
           shouChuAccounts,
@@ -259,6 +263,7 @@ const OperatorDashboard: React.FC = () => {
         setStats({
           totalAccounts: 0,
           normalAccounts: 0,
+          usingAccounts: 0,
           bannedAccounts: 0,
           restrictedAccounts: 0,
           shouChuAccounts: 0,
@@ -283,6 +288,7 @@ const OperatorDashboard: React.FC = () => {
       setStats({
         totalAccounts: 0,
         normalAccounts: 0,
+        usingAccounts: 0,
         bannedAccounts: 0,
         restrictedAccounts: 0,
         shouChuAccounts: 0,
@@ -309,6 +315,7 @@ const OperatorDashboard: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case '养号': return 'blue';
+      case '使用': return 'purple';
       case '售出': return 'green';
       case '封禁': return 'red';
       case '异常': return 'orange';
@@ -461,8 +468,8 @@ const OperatorDashboard: React.FC = () => {
       </Row>
 
       {/* 账号状态分布 */}
-      <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col span={6}>
+      <Row gutter={[12, 0]} style={{ marginBottom: 24 }}>
+        <Col flex="1">
           <Card>
             <Statistic
               title="养号账号"
@@ -471,7 +478,16 @@ const OperatorDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col flex="1">
+          <Card>
+            <Statistic
+              title="使用中账号"
+              value={stats.usingAccounts}
+              valueStyle={{ color: '#722ed1' }}
+            />
+          </Card>
+        </Col>
+        <Col flex="1">
           <Card>
             <Statistic
               title="异常账号"
@@ -480,7 +496,7 @@ const OperatorDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col flex="1">
           <Card>
             <Statistic
               title="封禁账号"
@@ -489,7 +505,7 @@ const OperatorDashboard: React.FC = () => {
             />
           </Card>
         </Col>
-        <Col span={6}>
+        <Col flex="1">
           <Card>
             <Statistic
               title="已售出账号"
