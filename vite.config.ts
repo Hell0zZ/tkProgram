@@ -24,7 +24,9 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3000,
+    host: getEnvVar('VITE_HOST', '0.0.0.0'), // 优先使用.env配置
+    port: parseInt(getEnvVar('VITE_PORT', '3000')),
+    strictPort: true, // 确保只使用指定端口
     proxy: {
       '/api': {
         target: getEnvVar('VITE_API_PROXY_TARGET', 'http://localhost:8080'),
@@ -34,4 +36,4 @@ export default defineConfig({
       }
     },
   },
-}); 
+});
