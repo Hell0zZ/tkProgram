@@ -21,8 +21,6 @@ import type { ColumnsType } from 'antd/es/table';
 import * as operatorService from '@/services/operator';
 import * as commonService from '@/services/common';
 import dayjs from 'dayjs';
-import moment from 'moment';
-import axios from 'axios';
 
 const { Option } = Select;
 
@@ -531,7 +529,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '更新时间',
           key: 'updateTime',
           width: 140,
-          render: (text, record: TikTokAccount) => {
+          render: (_, record: TikTokAccount) => {
             const updateTime = record.IPStatus === 1 
               ? record.SpiderLastUpdateAt 
               : record.SpiderLastFailureAt;
@@ -542,7 +540,7 @@ const AdminTikTokAccountList: React.FC = () => {
           title: '更新状态',
           key: 'updateStatus',
           width: 120,
-          render: (text, record: TikTokAccount) => {
+          render: (_, record: TikTokAccount) => {
             const ipStatus = record.IPStatus;
             const proxy = record.LastProxy || '服务器IP';
             const statusColor = getIPStatusColor(ipStatus);
@@ -725,7 +723,7 @@ const AdminTikTokAccountList: React.FC = () => {
             showTotal: (total, range) => `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
             onChange: (page, pageSize) => loadData(page, pageSize),
           }}
-          onChange={(pagination, filters, sorter) => {
+          onChange={(pagination, _filters, sorter) => {
             if (sorter && !Array.isArray(sorter) && sorter.field === 'TodayFans') {
               // 获取当前搜索条件
               const formValues = searchForm.getFieldsValue();
