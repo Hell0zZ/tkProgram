@@ -752,7 +752,6 @@ const TikTokAccountList: React.FC = () => {
           >
             <Input
               placeholder="请输入账号名"
-              disabled={!!editingId}
             />
           </Form.Item>
           <Form.Item
