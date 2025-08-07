@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout as AntLayout, Menu } from 'antd';
+import { Layout as AntLayout, Menu, Modal, Form, Input, message } from 'antd';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   DashboardOutlined,
@@ -9,8 +9,10 @@ import {
   UserOutlined,
   BarChartOutlined,
   LogoutOutlined,
+  KeyOutlined,
 } from '@ant-design/icons';
 import * as operatorService from '@/services/operator';
+import * as adminService from '@/services/admin';
 
 const { Header, Content, Sider } = AntLayout;
 
@@ -23,6 +25,11 @@ const Layout: React.FC = () => {
     username?: string;
     groupName?: string;
   }>({ role: 'admin' });
+  
+  // 密码修改相关状态
+  const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+  const [passwordForm] = Form.useForm();
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     const loadUserInfo = async () => {
@@ -139,6 +146,67 @@ const Layout: React.FC = () => {
     navigate('/login');
   };
 
+  // 密码修改处理函数
+  const handlePasswordChange = async () => {
+    try {
+      const values = await passwordForm.validateFields();
+      setPasswordLoading(true);
+      
+      // 获取当前用户详细信息
+      const userInfoResponse = await operatorService.getCurrentUserInfo();
+      if (userInfoResponse.Code !== 0) {
+        message.error('获取用户信息失败');
+        return;
+      }
+      
+      const userData = userInfoResponse.Data;
+      const userId = userData.id;
+      
+      // 构建更新参数，只传递必要字段
+      const updateParams = {
+        username: userData.username,     // 保持原用户名
+        password: values.newPassword     // 新密码
+        // 不传递 groupId，让后端保持原有分组
+      };
+      
+      console.log('Password change params:', updateParams);
+      
+      // 直接调用API，避免使用updateOperator的复杂逻辑
+      const response = await fetch(`/api/admin/operators/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          username: userData.username,
+          password: values.newPassword
+          // 不传递 group_id 字段
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (result.Code === 0) {
+        message.success('密码修改成功');
+        setPasswordModalVisible(false);
+        passwordForm.resetFields();
+      } else {
+        message.error('密码修改失败：' + result.Message);
+      }
+    } catch (error) {
+      console.error('密码修改失败:', error);
+      message.error('密码修改失败，请重试');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const handlePasswordModalCancel = () => {
+    setPasswordModalVisible(false);
+    passwordForm.resetFields();
+  };
+
   const handleMenuClick = ({ key }: { key: string }) => {
     navigate(`/${key}`);
   };
@@ -164,6 +232,14 @@ const Layout: React.FC = () => {
           <div style={{ fontSize: 14, color: '#fff' }}>
             {userInfo.role === 'operator' ? '运营人员' : '管理员'} {userInfo.username || '未知用户'}
           </div>
+          {/* 仅管理员显示修改密码按钮 */}
+          {userInfo.role === 'admin' && (
+            <KeyOutlined 
+              style={{ fontSize: 18, cursor: 'pointer', color: '#fff' }} 
+              onClick={() => setPasswordModalVisible(true)}
+              title="修改密码"
+            />
+          )}
           <LogoutOutlined 
             style={{ fontSize: 18, cursor: 'pointer' }} 
             onClick={handleLogout}
@@ -185,6 +261,59 @@ const Layout: React.FC = () => {
           <Outlet />
         </Content>
       </AntLayout>
+      
+      {/* 密码修改Modal */}
+      <Modal
+        title="修改密码"
+        open={passwordModalVisible}
+        onOk={handlePasswordChange}
+        onCancel={handlePasswordModalCancel}
+        confirmLoading={passwordLoading}
+        okText="确认修改"
+        cancelText="取消"
+        destroyOnClose={true}
+      >
+        <Form
+          form={passwordForm}
+          layout="vertical"
+          autoComplete="off"
+        >
+          <Form.Item
+            name="newPassword"
+            label="新密码"
+            rules={[
+              { required: true, message: '请输入新密码' },
+              { min: 6, message: '密码至少6个字符' },
+            ]}
+          >
+            <Input.Password
+              placeholder="请输入新密码"
+              autoComplete="new-password"
+            />
+          </Form.Item>
+          <Form.Item
+            name="confirmPassword"
+            label="确认密码"
+            dependencies={['newPassword']}
+            rules={[
+              { required: true, message: '请确认新密码' },
+              ({ getFieldValue }) => ({
+                validator(_, value) {
+                  if (!value || getFieldValue('newPassword') === value) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('两次输入的密码不一致'));
+                },
+              }),
+            ]}
+          >
+            <Input.Password
+              placeholder="请再次输入新密码"
+              autoComplete="new-password"
+            />
+          </Form.Item>
+        </Form>
+      </Modal>
     </AntLayout>
   );
 };
