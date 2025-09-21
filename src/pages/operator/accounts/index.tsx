@@ -400,6 +400,20 @@ const TikTokAccountList: React.FC = () => {
       ellipsis: true,
           render: (text: string) => text || '-',
         },
+        {
+          title: '邮箱',
+          dataIndex: 'Email',
+          key: 'email',
+          width: 150,
+          render: (text: string) => text || '-',
+        },
+        {
+          title: '设备编号',
+          dataIndex: 'DeviceId',
+          key: 'deviceId',
+          width: 120,
+          render: (text: string) => text || '-',
+        },
       ],
     },
     {
@@ -624,6 +638,11 @@ const TikTokAccountList: React.FC = () => {
               </Form.Item>
             </Col>
             <Col>
+              <Form.Item name="email" label="邮箱">
+                <Input placeholder="请输入邮箱" allowClear style={{ width: 160 }} />
+              </Form.Item>
+            </Col>
+            <Col>
               <Form.Item name="country_id" label="国家">
                 <Select placeholder="请选择国家" allowClear style={{ width: 120 }}>
                   {countries.map(country => (
@@ -805,6 +824,25 @@ const TikTokAccountList: React.FC = () => {
             </Select>
           </Form.Item>
           <Form.Item
+            name="email"
+            label="邮箱"
+            rules={[
+              { type: 'email', message: '请输入有效的邮箱地址' },
+            ]}
+          >
+            <Input
+              placeholder="请输入邮箱"
+            />
+          </Form.Item>
+          <Form.Item
+            name="device_id"
+            label="设备编号"
+          >
+            <Input
+              placeholder="请输入设备编号"
+            />
+          </Form.Item>
+          <Form.Item
             name="remark"
             label="备注"
           >
@@ -820,4 +858,4 @@ const TikTokAccountList: React.FC = () => {
   );
 };
 
-export default TikTokAccountList; 
+export default TikTokAccountList;
