@@ -87,6 +87,8 @@ const TikTokAccountList: React.FC = () => {
           CreatedAt: account.CreatedAt || account.created_at,
           UpdatedAt: account.UpdatedAt || account.updated_at || account.CreatedAt || account.created_at,
           Remark: account.Remark || account.remark || '',
+          Email: account.Email || account.email || '',
+          DeviceNumber: account.DeviceNumber || account.device_number || '',
         }));
         
         setAccounts(normalizedAccounts);
@@ -182,6 +184,8 @@ const TikTokAccountList: React.FC = () => {
       status: record.Status && record.Status !== '未知' ? record.Status : '',
       usage: record.Usage && record.Usage !== '未知' ? record.Usage : '',
       remark: record.Remark || '',
+      email: record.Email || '',
+      device_number: record.DeviceNumber || '',
     });
     setEditingId(record.ID);
     setModalVisible(true);
@@ -236,6 +240,14 @@ const TikTokAccountList: React.FC = () => {
       
       if (values.remark && values.remark.trim() !== '') {
         params.remark = values.remark;
+      }
+      
+      if (values.email && values.email.trim() !== '') {
+        params.email = values.email;
+      }
+      
+      if (values.device_number && values.device_number.trim() !== '') {
+        params.device_number = values.device_number;
       }
       
       console.log('最终提交的参数:', params);
@@ -409,8 +421,8 @@ const TikTokAccountList: React.FC = () => {
         },
         {
           title: '设备编号',
-          dataIndex: 'DeviceId',
-          key: 'deviceId',
+          dataIndex: 'DeviceNumber',
+          key: 'deviceNumber',
           width: 120,
           render: (text: string) => text || '-',
         },
@@ -835,7 +847,7 @@ const TikTokAccountList: React.FC = () => {
             />
           </Form.Item>
           <Form.Item
-            name="device_id"
+            name="device_number"
             label="设备编号"
           >
             <Input

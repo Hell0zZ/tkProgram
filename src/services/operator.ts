@@ -29,6 +29,14 @@ export const getTikTokAccounts = async (params: TikTokAccountQueryParams): Promi
 };
 
 export const updateTikTokAccount = async (id: number, params: UpdateTikTokAccountParams): Promise<ApiResponse<TikTokAccount>> => {
+  console.log('updateTikTokAccount 调用:', {
+    id,
+    params,
+    device_id: params.device_id,
+    device_id_type: typeof params.device_id,
+    has_device_id: 'device_id' in params,
+    params_keys: Object.keys(params)
+  });
   return request.put(`/api/account/${id}`, params);
 };
 
@@ -53,4 +61,4 @@ export const getCurrentUserInfo = async (): Promise<ApiResponse<UserInfo>> => {
 // Dashboard Stats APIs
 export const getDashboardStats = async (): Promise<ApiResponse<DashboardStats>> => {
   return request.get('/api/account/dashboard/stats');
-}; 
+};

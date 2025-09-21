@@ -75,7 +75,7 @@ export interface TikTokAccount {
   Usage: string;
   Remark?: string;
   Email?: string; // 邮箱
-  DeviceId?: string; // 设备编号
+  DeviceNumber?: string; // 设备编号
   CreatedBy: number;
   created_by_username?: string; // 创建人用户名
   TodayFans: number;
@@ -104,7 +104,7 @@ export interface CreateTikTokAccountParams {
   usage: string;
   remark?: string;
   email?: string; // 邮箱
-  device_id?: string; // 设备编号
+  device_number?: string; // 设备编号
 }
 
 export interface UpdateTikTokAccountParams {
@@ -114,7 +114,7 @@ export interface UpdateTikTokAccountParams {
   usage?: string;
   remark?: string;
   email?: string; // 邮箱
-  device_id?: string; // 设备编号
+  device_number?: string; // 设备编号
 }
 
 export interface TikTokAccountQueryParams extends PaginationParams {

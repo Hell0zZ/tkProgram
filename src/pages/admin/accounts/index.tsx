@@ -18,6 +18,7 @@ import {
 import { PlusOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { TikTokAccount, Country } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
+import * as adminService from '@/services/admin';
 import * as operatorService from '@/services/operator';
 import * as commonService from '@/services/common';
 import dayjs from 'dayjs';
@@ -88,6 +89,8 @@ const AdminTikTokAccountList: React.FC = () => {
           UpdatedAt: account.UpdatedAt || account.updated_at || account.CreatedAt || account.created_at,
           Remark: account.Remark || account.remark || '',
           CreatedByUsername: account.CreatedByUsername || account.created_by_username,
+          Email: account.Email || account.email || '',
+          DeviceNumber: account.DeviceNumber || account.device_number || '',
         }));
         
         setAccounts(normalizedAccounts);
@@ -211,6 +214,8 @@ const AdminTikTokAccountList: React.FC = () => {
       status: record.Status && record.Status !== '未知' ? record.Status : '',
       usage: record.Usage && record.Usage !== '未知' ? record.Usage : '',
       remark: record.Remark || '',
+      email: record.Email || '',
+      device_number: record.DeviceNumber || '',
     });
     setEditingId(record.ID);
     setModalVisible(true);
@@ -236,12 +241,22 @@ const AdminTikTokAccountList: React.FC = () => {
     try {
       const values = await form.validateFields();
       console.log('管理员页面：表单提交数据:', values);
+      console.log('管理员页面：device_number原始值:', values.device_number);
+      console.log('管理员页面：device_number类型:', typeof values.device_number);
       
       // 清理空值并格式化数据
-      const submitData: any = {
-        account_name: values.account_name,
-        country_id: values.country_id,
-      };
+      const submitData: any = {};
+      
+      // 对于创建操作，需要必填字段
+      if (!editingId) {
+        submitData.account_name = values.account_name;
+        submitData.country_id = values.country_id;
+      } else {
+        // 对于更新操作，只包含可更新的字段
+        if (values.country_id) {
+          submitData.country_id = values.country_id;
+        }
+      }
       
       // 只有非空字段才加入提交数据
       if (values.nickname && values.nickname.trim() !== '') {
@@ -259,8 +274,18 @@ const AdminTikTokAccountList: React.FC = () => {
       if (values.remark && values.remark.trim() !== '') {
         submitData.remark = values.remark.trim();
       }
+      if (values.email && values.email.trim() !== '') {
+        submitData.email = values.email.trim();
+      }
+      if (values.device_number && values.device_number.trim() !== '') {
+        submitData.device_number = values.device_number.trim();
+        console.log('管理员页面：device_number已添加到submitData:', submitData.device_number);
+      } else {
+        console.log('管理员页面：device_number为空或未通过验证:', values.device_number);
+      }
       
       console.log('管理员页面：清理后的提交数据:', submitData);
+      console.log('管理员页面：submitData中是否包含device_number:', 'device_number' in submitData);
       
       let response;
       if (editingId) {
@@ -425,8 +450,8 @@ const AdminTikTokAccountList: React.FC = () => {
         },
         {
           title: '设备编号',
-          dataIndex: 'DeviceId',
-          key: 'DeviceId',
+          dataIndex: 'DeviceNumber',
+          key: 'DeviceNumber',
           width: 120,
           render: (text) => text || '-',
         },
@@ -864,7 +889,7 @@ const AdminTikTokAccountList: React.FC = () => {
             <Input placeholder="请输入邮箱（可选）" />
           </Form.Item>
           <Form.Item
-            name="device_id"
+            name="device_number"
             label="设备编号"
           >
             <Input placeholder="请输入设备编号（可选）" />
